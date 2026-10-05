@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAdvice } from '../lib/api'
+import { useDefaultPeriod } from '../lib/period'
 import ActionCard from '../components/advice/ActionCard'
 
-const YEAR = '113'
-const SEASON = '4'
-
 export default function Advice() {
+  const period = useDefaultPeriod()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!period) return
     setLoading(true)
     setError(null)
-    fetchAdvice(YEAR, SEASON)
+    fetchAdvice(period.year, period.season)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [period])
 
   return (
     <div className="max-w-6xl mx-auto px-8 py-8 space-y-6">

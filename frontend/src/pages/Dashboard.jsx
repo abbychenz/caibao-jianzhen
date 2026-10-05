@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchStock } from '../lib/api'
+import { useDefaultPeriod } from '../lib/period'
 import StatCard from '../components/StatCard'
 import ScoreRing from '../components/ScoreRing'
 import DeepAnalysisPanel from '../components/analysis/DeepAnalysisPanel'
 import TechnicalPanel from '../components/technical/TechnicalPanel'
 import NewsPanel from '../components/NewsPanel'
-
-const YEAR = '113'
-const SEASON = '4'
 
 function fmtNumber(n) {
   if (n == null) return '—'
@@ -24,20 +22,22 @@ function recommendation(score) {
 
 export default function Dashboard() {
   const { companyId = '2330' } = useParams()
+  const period = useDefaultPeriod()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [tab, setTab] = useState('overview')
 
   useEffect(() => {
+    if (!period) return
     setLoading(true)
     setError(null)
     setTab('overview')
-    fetchStock(companyId, YEAR, SEASON)
+    fetchStock(companyId, period.year, period.season)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [companyId])
+  }, [companyId, period])
 
   if (loading) {
     return <div className="max-w-6xl mx-auto px-8 py-8 text-gray-500">資料讀取中…</div>

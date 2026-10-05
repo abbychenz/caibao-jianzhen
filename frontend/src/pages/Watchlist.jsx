@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWatchlist } from '../lib/api'
+import { useDefaultPeriod } from '../lib/period'
 import ScoreBadge from '../components/ScoreBadge'
 
-const YEAR = '113'
-const SEASON = '4'
-
 export default function Watchlist() {
+  const period = useDefaultPeriod()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchWatchlist(YEAR, SEASON)
+    if (!period) return
+    setLoading(true)
+    fetchWatchlist(period.year, period.season)
       .then((data) => setItems(data.items))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [period])
 
   const sorted = [...items].sort(
     (a, b) => (b['綜合評分'] ?? -1) - (a['綜合評分'] ?? -1)
@@ -28,7 +29,7 @@ export default function Watchlist() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">觀察名單</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {YEAR} 年第 {SEASON} 季財報，資料來源：公開資訊觀測站 (MOPS)
+            {period ? `${period.year} 年第 ${period.season} 季財報` : '讀取中…'}，資料來源：公開資訊觀測站 (MOPS)
           </p>
         </div>
       </div>

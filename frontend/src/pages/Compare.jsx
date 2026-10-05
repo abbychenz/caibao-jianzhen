@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchCompare } from '../lib/api'
+import { useDefaultPeriod } from '../lib/period'
 import MetricCompareCard from '../components/compare/MetricCompareCard'
 import ScoreBarCompare from '../components/compare/ScoreBarCompare'
 import CompareTable from '../components/compare/CompareTable'
 
-const YEAR = '113'
-const SEASON = '4'
-
 export default function Compare() {
+  const period = useDefaultPeriod()
   const [params, setParams] = useSearchParams()
   const [inputA, setInputA] = useState(params.get('a') || '2330')
   const [inputB, setInputB] = useState(params.get('b') || '2454')
@@ -17,7 +16,7 @@ export default function Compare() {
   const [error, setError] = useState(null)
 
   function runCompare(a, b) {
-    if (!a || !b) return
+    if (!a || !b || !period) return
     if (a === b) {
       setError('請輸入兩支不同的股票代號')
       setData(null)
@@ -25,7 +24,7 @@ export default function Compare() {
     }
     setLoading(true)
     setError(null)
-    fetchCompare(a, b, YEAR, SEASON)
+    fetchCompare(a, b, period.year, period.season)
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -37,11 +36,11 @@ export default function Compare() {
     runCompare(inputA.trim(), inputB.trim())
   }
 
-  // 第一次進頁面就自動比較預設（或網址帶入）的兩支股票
+  // 第一次進頁面（或 period 載入完成後）自動比較預設（或網址帶入）的兩支股票
   useEffect(() => {
     runCompare(inputA, inputB)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [period])
 
   return (
     <div className="max-w-6xl mx-auto px-8 py-8 space-y-6">

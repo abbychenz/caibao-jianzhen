@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchPortfolioSummary } from '../lib/api'
+import { useDefaultPeriod } from '../lib/period'
 import SummaryCards from '../components/portfolio/SummaryCards'
 import InsightSummary from '../components/portfolio/InsightSummary'
 import HoldingsTable from '../components/portfolio/HoldingsTable'
@@ -8,31 +9,30 @@ import IndustryPieChart from '../components/portfolio/IndustryPieChart'
 import AddTransactionModal from '../components/portfolio/AddTransactionModal'
 import ProfileForm from '../components/profile/ProfileForm'
 
-const YEAR = '113'
-const SEASON = '4'
-
 function todayLabel() {
   return new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date())
 }
 
 export default function Portfolio() {
+  const period = useDefaultPeriod()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   function load() {
+    if (!period) return
     setLoading(true)
     setError(null)
-    fetchPortfolioSummary(YEAR, SEASON)
+    fetchPortfolioSummary(period.year, period.season)
       .then(setSummary)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(load, [period])
 
-  if (loading) {
+  if (!period || loading) {
     return <div className="max-w-6xl mx-auto px-8 py-8 text-gray-500">資料讀取中…</div>
   }
   if (error) {

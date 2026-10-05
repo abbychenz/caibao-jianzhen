@@ -74,8 +74,36 @@ DEFAULT_WATCHLIST = [
     {"id": "1101", "name": "台泥", "industry": "水泥業"},
 ]
 
-DEFAULT_YEAR = "113"
-DEFAULT_SEASON = "4"
+def _current_default_period() -> tuple[str, str]:
+    """
+    根據今天的日期，推算 MOPS 上「目前應該已經公布」的最新一季財報（民國年）。
+
+    財報公布截止日（概略）：
+      - Q1（第一季）        5/15 前
+      - Q2／半年報（第二季） 8/31 前
+      - Q3（第三季）        11/14 前
+      - Q4／年報（第四季）   次年 3/31 前
+
+    抓「截止日已過」的最新一季，並多留 3 天緩衝（避免剛好卡在截止日當天、
+    部分公司還沒申報完畢導致資料不齊）。
+    """
+    from datetime import date, timedelta
+
+    today = date.today() - timedelta(days=3)
+    roc_year = today.year - 1911
+
+    if today.month < 3 or (today.month == 3 and today.day < 31):
+        return str(roc_year - 1), "4"
+    if today.month < 5 or (today.month == 5 and today.day < 15):
+        return str(roc_year - 1), "4"
+    if today.month < 8 or (today.month == 8 and today.day < 31):
+        return str(roc_year), "1"
+    if today.month < 11 or (today.month == 11 and today.day < 14):
+        return str(roc_year), "2"
+    return str(roc_year), "3"
+
+
+DEFAULT_YEAR, DEFAULT_SEASON = _current_default_period()
 
 # 公司名稱/產業別的簡易快取，避免每次都重打 MOPS 公司基本資料 API
 _company_meta_cache: dict[str, dict] = {}
@@ -108,6 +136,12 @@ def get_company_meta(company_id: str) -> dict:
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/default-period")
+def get_default_period():
+    """前端用這個 API 拿到目前應該使用的最新一季財報年/季，不用在前端寫死年份。"""
+    return {"year": DEFAULT_YEAR, "season": DEFAULT_SEASON}
 
 
 @app.get("/api/watchlist")

@@ -45,6 +45,10 @@ async function deleteJson(path) {
   return res.json()
 }
 
+export function fetchDefaultPeriod() {
+  return getJson('/default-period')
+}
+
 export function fetchWatchlist(year, season) {
   return getJson(`/watchlist?year=${year}&season=${season}`)
 }
